@@ -130,7 +130,7 @@ Where `--num_samples` is the number of motions that will be generated and `--mot
 
 It will look something like this:
 
-<img alt="example" src="assets/example_generate.gif" width="50%"/>
+<img alt="example" src="assets/example_generate.gif" width="40%"/>
 
 
 ## Training
@@ -175,7 +175,7 @@ python -m sample.edit --model_path <path_to_pretrained_model> --edit_mode in_bet
 
 For example:
 
-<img alt="example" src="assets/inbetween20.gif" width="80%"/> 
+<img alt="example" src="assets/inbetween.gif" width="80%"/> 
 
 generated parts are colored in an orange scheme, given input is colored in a blue scheme.
 

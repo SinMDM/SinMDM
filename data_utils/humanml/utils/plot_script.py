@@ -121,7 +121,7 @@ def explicit_plot_3d_motion(save_path, kinematic_tree, joints, title, dataset, f
         colors[4] = colors_blue[4]
     elif vis_mode == 'gt':
         colors = colors_blue
-    if dataset in ['mixmamo', 'bvh_general']:
+    if dataset in ['bvh_general']:
         colors = colors_dragon
 
     frame_number = data.shape[0]
