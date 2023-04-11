@@ -1,6 +1,6 @@
 # SinMDM: Single Motion Diffusion
 
-Please visit out [project page](https://sinmdm.github.io/SinMDM-page/) for more details.
+Please visit our [project page](https://sinmdm.github.io/SinMDM-page/) for more details.
 
 ## Setup
 
@@ -177,7 +177,7 @@ For example:
 
 <img alt="example" src="assets/inbetween20.gif" width="80%"/> 
 
-generated parts are colored in orange scheme, given input is colored in blue scheme.
+generated parts are colored in an orange scheme, given input is colored in a blue scheme.
 
 
 ### Motion expansion
@@ -195,7 +195,7 @@ For example:
 
 <img alt="example" src="assets/expansion.gif" width="80%"/> 
 
-generated parts are colored in orange scheme, given input is colored in blue scheme.
+generated parts are colored in an orange scheme, given input is colored in a blue scheme.
 
 
 
@@ -214,7 +214,7 @@ For example: (reference motion is "chicken dance" and lower body is generated wi
 
 <img alt="example" src="assets/lower_body_example.gif" width="50%"/> 
 
-generated lower body is colored in orange scheme. Upper body which is given as input is colored in blue scheme.
+generated lower body is colored in an orange scheme. Upper body which is given as input is colored in a blue scheme.
 
 ### Upper body editing
 Similarly to lower body editing, use `--edit_mode upper_body`
@@ -228,7 +228,7 @@ For example: (reference motion is "salsa dancing" and upper body is generated wi
 
 <img alt="example" src="assets/upper_body_example.gif" width="50%"/> 
 
-generated upper body is colored in orange scheme. Lower body which is given as input is colored in blue scheme.
+generated upper body is colored in an orange scheme. Lower body which is given as input is colored in a blue scheme.
 
 
 ### Harmonization
