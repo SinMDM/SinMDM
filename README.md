@@ -250,8 +250,38 @@ For example, here the model was trained on "happy" walk, and we transfer the "ha
 
 ## Evaluation
 
+
+### Preparations
+
+**HumanML3D**
+
+```shell
+bash prepare/download_t2m_evaluators.sh
+bash prepare/download_humanml3d_dataset.sh
+bash prepare/download_humanml3d_models.sh
+```
+
+**Mixamo**
+
+```shell
+bash prepare/download_mixamo_dataset.sh
+bash prepare/download_mixamo_models.sh
+```
+
 ### Run evaluation command
-Coming soon.
+To evaluate a single model (trained on a single sequence), run:
+
+**HumanML3D**
+
+```shell
+python -m eval.eval_humanml --model_path ./save/humanml/0000/model000019999.pt
+```
+
+**Mixamo**
+
+```shell
+python -m eval.eval_mixamo --model_path ./save/mixamo/0000/model000019999.pt
+```
 
 ### Run evaluation benchmark
 Coming soon.

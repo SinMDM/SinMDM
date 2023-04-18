@@ -54,7 +54,7 @@ def calc_inter_diversity(eval_wrapper, samples):
     dist = linalg.norm(motion_emb[:samples.shape[0]//2] - motion_emb[samples.shape[0]//2:], axis=1)  # FIXME - will not work for odd bs
     return dist.mean()
 
-def calc_sifid(eval_wrapper, gen_samples, gt_sample, window_size=40):
+def calc_sifid(eval_wrapper, gen_samples, gt_sample, window_size=20):
 
     gt_slices = slice_motion_sample(gt_sample, window_size)
 
@@ -75,7 +75,7 @@ def calc_sifid(eval_wrapper, gen_samples, gt_sample, window_size=40):
     return np.array(sifid).mean()
 
 
-def calc_intra_diversity(eval_wrapper, samples, window_size=40):
+def calc_intra_diversity(eval_wrapper, samples, window_size=20):
     max_offset = samples.shape[1] - window_size
     dist = []
     for sample_i in range(samples.shape[0]):
@@ -91,7 +91,7 @@ def evaluate(args, model, diffusion, eval_wrapper, num_samples_limit, replicatio
 
     results = {}
 
-    for window_size in [10, 20, 40]:
+    for window_size in [20]:
         print(f'===Starting [window_size={window_size}]===')
         intra_diversity = []
         gt_intra_diversity = []
