@@ -135,9 +135,8 @@ if __name__ == '__main__':
     args.batch_size = 32 # This must be 32! Don't change it! otherwise it will cause a bug in R precision calc!
     name = os.path.basename(os.path.dirname(args.model_path))
     niter = os.path.basename(args.model_path).replace('model', '').replace('.pt', '')
-    log_file = os.path.join(os.path.dirname(args.model_path), 'eval_humanml_{}_{}'.format(name, niter))
-    log_file += f'_{args.eval_mode}'
-    log_file += '.log'
+    log_file = os.path.join(os.path.dirname(args.model_path),
+                            os.path.basename(args.model_path).replace('model', 'eval_').replace('.pt', '.log'))
 
     print(f'Will save to log file [{log_file}]')
 
@@ -165,4 +164,8 @@ if __name__ == '__main__':
     logger.log(f"Loading evaluator")
     eval_wrapper = EvaluatorMDMWrapper(args.dataset, dist_util.dev())
 
-    evaluate(args, model, diffusion, eval_wrapper, num_samples_limit, replication_times)
+    eval_dict = evaluate(args, model, diffusion, eval_wrapper, num_samples_limit, replication_times)
+
+    with open(log_file, 'w') as fw:
+        fw.write(str(eval_dict))
+    np.save(log_file.replace('.log', '.npy'), eval_dict)

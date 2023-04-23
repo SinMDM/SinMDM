@@ -14,6 +14,7 @@ from utils.parser_util import generate_args, evaluation_parser
 from utils.model_util import create_model_and_diffusion, load_model
 from utils import dist_util
 from data_utils.tensors import collate
+import os
 
 
 def mixamo_evaluate(args, model, diffusion):
@@ -116,10 +117,19 @@ if __name__ == "__main__":
     state_dict = torch.load(args.model_path, map_location='cpu')
     load_model(model, state_dict)
 
+    log_file = os.path.join(os.path.dirname(args.model_path),
+                            os.path.basename(args.model_path).replace('model', 'eval_').replace('.pt', '.log'))
+
+    print(f'Will save to log file [{log_file}]')
+
     model.to(dist_util.dev())
     diffusion.to(dist_util.dev())
     if args.use_fp16:
         model.convert_to_fp16()
     model.eval()  # disable random masking
 
-    print(mixamo_evaluate(args, model, diffusion))
+    eval_dict = mixamo_evaluate(args, model, diffusion)
+    print(eval_dict)
+    with open(log_file, 'w') as fw:
+        fw.write(str(eval_dict))
+    np.save(log_file.replace('.log', '.npy'), eval_dict)

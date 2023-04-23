@@ -1,0 +1,11 @@
+python -m train.train_sinmdm --arch qna --dataset mixamo --eval_during_training --save_interval 20000 --num_steps 20000 --save_dir ./save/my_mixamo_benchmark/0000 --sin_path ./dataset/mixamo/0000_Breakdance_Freezes.bvh
+python -m train.train_sinmdm --arch qna --dataset mixamo --eval_during_training --save_interval 20000 --num_steps 20000 --save_dir ./save/my_mixamo_benchmark/0001 --sin_path ./dataset/mixamo/0001_Capoeira.bvh
+python -m train.train_sinmdm --arch qna --dataset mixamo --eval_during_training --save_interval 20000 --num_steps 20000 --save_dir ./save/my_mixamo_benchmark/0002 --sin_path ./dataset/mixamo/0002_Chicken_Dance.bvh
+python -m train.train_sinmdm --arch qna --dataset mixamo --eval_during_training --save_interval 20000 --num_steps 20000 --save_dir ./save/my_mixamo_benchmark/0003 --sin_path ./dataset/mixamo/0003_Dancing.bvh
+python -m train.train_sinmdm --arch qna --dataset mixamo --eval_during_training --save_interval 20000 --num_steps 20000 --save_dir ./save/my_mixamo_benchmark/0004 --sin_path ./dataset/mixamo/0004_House_Dancing.bvh
+python -m train.train_sinmdm --arch qna --dataset mixamo --eval_during_training --save_interval 20000 --num_steps 20000 --save_dir ./save/my_mixamo_benchmark/0005 --sin_path ./dataset/mixamo/0005_Punch_To_Elbow_Combo.bvh
+python -m train.train_sinmdm --arch qna --dataset mixamo --eval_during_training --save_interval 20000 --num_steps 20000 --save_dir ./save/my_mixamo_benchmark/0006 --sin_path ./dataset/mixamo/0006_Salsa_Dancing.bvh
+python -m train.train_sinmdm --arch qna --dataset mixamo --eval_during_training --save_interval 20000 --num_steps 20000 --save_dir ./save/my_mixamo_benchmark/0007 --sin_path ./dataset/mixamo/0007_Swing_Dancing.bvh
+python -m train.train_sinmdm --arch qna --dataset mixamo --eval_during_training --save_interval 20000 --num_steps 20000 --save_dir ./save/my_mixamo_benchmark/0008 --sin_path ./dataset/mixamo/0008_Warming_Up.bvh
+python -m train.train_sinmdm --arch qna --dataset mixamo --eval_during_training --save_interval 20000 --num_steps 20000 --save_dir ./save/my_mixamo_benchmark/0009 --sin_path ./dataset/mixamo/0009_Wave_Hip_Hop_Dance.bvh
+python -m eval.eval_mixamo_benchmark --benchmark_dir ./save/my_mixamo_benchmark --num_steps 20000

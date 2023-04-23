@@ -284,7 +284,35 @@ python -m eval.eval_mixamo --model_path ./save/mixamo/0000/model000019999.pt
 ```
 
 ### Run evaluation benchmark
-Coming soon.
+
+**HumanML3D - reproduce benchmark**
+
+with the pre-trained checkpoints:
+
+```shell
+bash ./eval/eval_only_humanml_benchmark.sh
+```
+
+**HumanML3D - train + benchmark**
+
+```shell
+bash ./eval/train_eval_humanml_benchmark.sh
+```
+
+
+**Mixamo - reproduce benchmark**
+
+with the pre-trained checkpoints:
+
+```shell
+bash ./eval/eval_only_mixamo_benchmark.sh
+```
+
+**Mixamo - train + benchmark**
+
+```shell
+bash ./eval/train_eval_mixamo_benchmark.sh
+```
 
 ## Acknowledgments
 
