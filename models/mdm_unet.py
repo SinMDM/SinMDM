@@ -423,11 +423,6 @@ class MDM_UNetModel(nn.Module):
             zero_module(conv_nd(dims, input_ch, out_channels, 3, padding=padding, padding_mode=padding_mode)),
         )
 
-        self.clip_dim = 512  # FIXME - hardcoded
-        if 'text' in self.motion_args['cond_mode']:
-            self.embed_text = nn.Linear(self.clip_dim, 256)  # FIXME - hardcoded
-            print('EMBED TEXT')
-
     def convert_to_fp16(self):
         """
         Convert the torso of the model to float16.
