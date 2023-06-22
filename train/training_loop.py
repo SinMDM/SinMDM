@@ -47,7 +47,6 @@ class TrainLoop:
         self.use_fp16 = False  # deprecating this option
         self.fp16_scale_growth = 1e-3  # deprecating this option
         self.weight_decay = args.weight_decay
-        self.lr_anneal_steps = args.lr_anneal_steps
         self.crop_ratio = args.crop_ratio
         self.sin_path = args.sin_path
 
@@ -156,9 +155,6 @@ class TrainLoop:
         start_time_measure = time.time()
         time_measure = []
         for self.step in range(self.num_steps-self.resume_step):
-            if self.lr_anneal_steps and self.total_step() >= self.lr_anneal_steps:
-                break
-
             self.run_step(batch, cond)
             if self.total_step() % self.log_interval == 0:
                 for k, v in logger.get_current().name2val.items():
@@ -187,8 +183,6 @@ class TrainLoop:
                 # Run for a finite amount of time in integration tests.
                 if os.environ.get("DIFFUSION_TRAINING_TEST", "") and self.total_step() > 0:
                     return
-            if self.lr_anneal_steps and self.total_step() >= self.lr_anneal_steps:
-                break
             self.adjust_learning_rate(self.opt, self.step, self.args)
 
         if len(time_measure) > 0:
@@ -244,7 +238,6 @@ class TrainLoop:
         self.mp_trainer.optimize(self.opt)
         if hasattr(self, 'lr_scheduler'):
             self.lr_scheduler.step()
-        self._anneal_lr()
         self.log_step()
 
     def forward_backward(self, batch, cond):
@@ -289,14 +282,6 @@ class TrainLoop:
                 self.diffusion, t, {k: v * weights for k, v in losses.items()}
             )
             self.mp_trainer.backward(loss)
-
-    def _anneal_lr(self):
-        if not self.lr_anneal_steps:
-            return
-        frac_done = self.total_step() / self.lr_anneal_steps
-        lr = self.lr * (1 - frac_done)
-        for param_group in self.opt.param_groups:
-            param_group["lr"] = lr
 
     def log_step(self):
         logger.logkv("step", self.total_step() + self.resume_step)

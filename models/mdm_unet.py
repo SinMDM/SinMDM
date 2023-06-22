@@ -18,6 +18,7 @@ from diffusion.nn import (
     normalization,
     timestep_embedding,
 )
+from models.qna import FusedQnA1d
 
 
 class TimestepBlock(nn.Module):
@@ -227,6 +228,155 @@ class ResBlock(TimestepBlock):
         return self.skip_connection(x) + h
 
 
+class AttentionBlock(nn.Module):
+    """
+    An attention block that allows spatial positions to attend to each other.
+
+    Originally ported from here, but adapted to the N-d case.
+    https://github.com/hojonathanho/diffusion/blob/1e0dceb3b3495bbe19116a5e1b3596cd0706c543/diffusion_tf/models/unet.py#L66.
+    """
+
+    def __init__(
+            self,
+            channels,
+            num_heads=1,
+            num_head_channels=-1,
+            use_checkpoint=False,
+            use_new_attention_order=False,
+            use_qna=False,
+            kernel_size=3,
+    ):
+        super().__init__()
+        self.channels = channels
+        self.use_qna = use_qna
+        if num_head_channels == -1:
+            self.num_heads = num_heads
+        else:
+            assert (
+                    channels % num_head_channels == 0
+            ), f"q,k,v channels {channels} is not divisible by num_head_channels {num_head_channels}"
+            self.num_heads = channels // num_head_channels
+        self.use_checkpoint = use_checkpoint
+        self.norm = normalization(channels)
+        if not use_qna:
+            self.qkv = conv_nd(1, channels, channels * 3, 1)
+        if use_qna:
+            self.attention = FusedQnA1d(
+                in_features=self.channels,
+                timesteps_features=None,
+                hidden_features=self.channels,
+                heads=self.num_heads,
+                kernel_size=kernel_size,
+                stride=1,
+                padding=(kernel_size - 1) // 2,
+            )
+        elif use_new_attention_order:
+            # split qkv before split heads
+            self.attention = QKVAttention(self.num_heads)
+        else:
+            # split heads before split qkv
+            self.attention = QKVAttentionLegacy(self.num_heads)
+        if not use_qna:
+            self.proj_out = zero_module(conv_nd(1, channels, channels, 1))
+
+    def forward(self, x):
+        return checkpoint(self._forward, (x,), self.parameters(), self.use_checkpoint)
+
+    def _forward(self, x):
+        b, c, *spatial = x.shape
+        x = x.reshape(b, c, -1)
+
+        if self.use_qna:
+            h = self.norm(x).reshape(b, c, 1, -1)
+            h = self.attention(h)
+            h = h.reshape(b, c, -1)
+        else:
+            qkv = self.qkv(self.norm(x))
+            h = self.attention(qkv)
+            h = self.proj_out(h)
+        return (x + h).reshape(b, c, *spatial)
+
+
+def count_flops_attn(model, _x, y):
+    """
+    A counter for the `thop` package to count the operations in an
+    attention operation.
+    Meant to be used like:
+        macs, params = thop.profile(
+            model,
+            inputs=(inputs, timestamps),
+            custom_ops={QKVAttention: QKVAttention.count_flops},
+        )
+    """
+    b, c, *spatial = y[0].shape
+    num_spatial = int(np.prod(spatial))
+    # We perform two matmuls with the same number of ops.
+    # The first computes the weight matrix, the second computes
+    # the combination of the value vectors.
+    matmul_ops = 2 * b * (num_spatial ** 2) * c
+    model.total_ops += th.DoubleTensor([matmul_ops])
+
+
+class QKVAttentionLegacy(nn.Module):
+    """
+    A module which performs QKV attention. Matches legacy QKVAttention + input/ouput heads shaping
+    """
+
+    def __init__(self, n_heads):
+        super().__init__()
+        self.n_heads = n_heads
+
+    def forward(self, qkv):
+        """
+        Apply QKV attention.
+
+        :param qkv: an [N x (H * 3 * C) x T] tensor of Qs, Ks, and Vs.
+        :return: an [N x (H * C) x T] tensor after attention.
+        """
+        bs, width, length = qkv.shape
+        assert width % (3 * self.n_heads) == 0
+        ch = width // (3 * self.n_heads)
+        q, k, v = qkv.reshape(bs * self.n_heads, ch * 3, length).split(ch, dim=1)
+        scale = 1 / math.sqrt(math.sqrt(ch))
+        weight = th.einsum(
+            "bct,bcs->bts", q * scale, k * scale
+        )  # More stable with f16 than dividing afterwards
+        weight = th.softmax(weight.float(), dim=-1).type(weight.dtype)
+        a = th.einsum("bts,bcs->bct", weight, v)
+        return a.reshape(bs, -1, length)
+
+
+class QKVAttention(nn.Module):
+    """
+    A module which performs QKV attention and splits in a different order.
+    """
+
+    def __init__(self, n_heads):
+        super().__init__()
+        self.n_heads = n_heads
+
+    def forward(self, qkv):
+        """
+        Apply QKV attention.
+
+        :param qkv: an [N x (3 * H * C) x T] tensor of Qs, Ks, and Vs.
+        :return: an [N x (H * C) x T] tensor after attention.
+        """
+        bs, width, length = qkv.shape
+        assert width % (3 * self.n_heads) == 0
+        ch = width // (3 * self.n_heads)
+        q, k, v = qkv.chunk(3, dim=1)
+        scale = 1 / math.sqrt(math.sqrt(ch))
+        weight = th.einsum(
+            "bct,bcs->bts",
+            (q * scale).view(bs * self.n_heads, ch, length),
+            (k * scale).view(bs * self.n_heads, ch, length),
+        )  # More stable with f16 than dividing afterwards
+        weight = th.softmax(weight.float(), dim=-1).type(weight.dtype)
+        a = th.einsum("bts,bcs->bct", weight, v.reshape(bs * self.n_heads, ch, length))
+        return a.reshape(bs, -1, length)
+
+
 class MDM_UNetModel(nn.Module):
     """
     The full UNet model with attention and timestep embedding.
@@ -281,7 +431,10 @@ class MDM_UNetModel(nn.Module):
         resblock_updown=False,
         use_new_attention_order=False,
         padding_mode='zeros',
-        padding=1
+        padding=1,
+        use_attention=False,
+        use_qna=True,
+        kernel_size=3,
     ):
         super().__init__()
 
@@ -345,6 +498,19 @@ class MDM_UNetModel(nn.Module):
                     )
                 ]
                 ch = int(mult * model_channels)
+                if use_attention:
+                    if ds in attention_resolutions:
+                        layers.append(
+                            AttentionBlock(
+                                ch,
+                                use_checkpoint=use_checkpoint,
+                                num_heads=num_heads,
+                                num_head_channels=num_head_channels,
+                                use_new_attention_order=use_new_attention_order,
+                                use_qna=use_qna,
+                                kernel_size=kernel_size,
+                            )
+                        )
                 self.input_blocks.append(TimestepEmbedSequential(*layers))
                 self._feature_size += ch
                 input_block_chans.append(ch)
@@ -391,10 +557,23 @@ class MDM_UNetModel(nn.Module):
                         use_checkpoint=use_checkpoint,
                         use_scale_shift_norm=use_scale_shift_norm,
                         padding_mode=padding_mode,
-                        padding = padding,
-                )
+                        padding=padding,
+                    )
                 ]
                 ch = int(model_channels * mult)
+                if use_attention:
+                    if ds in attention_resolutions:
+                        print(f'added attention block for {ds}')
+                        layers.append(
+                            AttentionBlock(
+                                ch,
+                                use_checkpoint=use_checkpoint,
+                                num_heads=num_heads_upsample,
+                                num_head_channels=num_head_channels,
+                                use_new_attention_order=use_new_attention_order,
+                                use_qna=use_qna,
+                            )
+                        )
                 if level and i == num_res_blocks:
                     out_ch = ch
                     layers.append(
@@ -470,7 +649,7 @@ class MDM_UNetModel(nn.Module):
                 x = x.reshape(self.n_samples, -1, self.n_frames)
             else:
                 x = x.reshape(self.n_samples, -1, 1, self.n_frames)
-            assert x.shape[1] == self.n_joints*self.n_feats
+            assert x.shape[1] == self.n_joints * self.n_feats
         else:
             raise 'dataset not supported yet.'
 
@@ -522,7 +701,7 @@ class MDM_UNetModel(nn.Module):
             _out = _out[:, :, :-self.resid_joints, :]
 
         if self.motion_args['dataset'] == 'humanml':
-            if self.dims==1:
+            if self.dims == 1:
                 _out = _out.reshape(self.n_samples, self.n_joints, self.n_feats, self.n_frames)
         elif self.motion_args['dataset'] in ['mixamo', 'bvh_general']:
             _out = _out.reshape(self.n_samples, self.n_joints, self.n_feats, self.n_frames)

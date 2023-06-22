@@ -33,6 +33,9 @@ def create_model_and_diffusion(args, data, num_joints = None):
             conv_1d=args.conv_1d,
             padding_mode=args.padding_mode,
             padding=args.padding,
+            use_attention=args.use_attention,
+            use_qna=args.use_qna,
+            kernel_size=args.kernel_size,
         )
     elif args.arch == 'qna':
         qna_args = dict(
@@ -169,6 +172,9 @@ def create_motion_unet(
     conv_1d=False,
     padding_mode='zeros',
     padding=1,
+    use_attention=False,
+    use_qna=False,
+    kernel_size=3,
 ):
     if channel_mult == "":
         if image_size == 512:
@@ -214,4 +220,7 @@ def create_motion_unet(
         use_new_attention_order=use_new_attention_order,
         padding_mode=padding_mode,
         padding=padding,
+        use_attention=use_attention,
+        use_qna=use_qna,
+        kernel_size=kernel_size,
     )

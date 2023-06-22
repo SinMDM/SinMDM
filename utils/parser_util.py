@@ -115,6 +115,8 @@ def add_model_options(parser):
     group.add_argument("--lr_method", default=None, type=str, help="")
     group.add_argument("--lr_step", default=None, type=int, help="")
     group.add_argument("--lr_gamma", default=None, type=float, help="")
+    group.add_argument("--use_attention", action='store_true', help="")
+    group.add_argument("--use_qna", action='store_true', help="")
 
     # QnA Options:
     group.add_argument("--head_dim", default=32, type=int, help="")
