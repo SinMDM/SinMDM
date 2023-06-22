@@ -500,6 +500,7 @@ class MDM_UNetModel(nn.Module):
                 ch = int(mult * model_channels)
                 if use_attention:
                     if ds in attention_resolutions:
+                        print(f'added attention block for input block, level {np.log2(ds) + 1}')
                         layers.append(
                             AttentionBlock(
                                 ch,
@@ -563,7 +564,7 @@ class MDM_UNetModel(nn.Module):
                 ch = int(model_channels * mult)
                 if use_attention:
                     if ds in attention_resolutions:
-                        print(f'added attention block for {ds}')
+                        print(f'added attention block for output block, level {np.log2(ds) + 1}')
                         layers.append(
                             AttentionBlock(
                                 ch,

@@ -95,8 +95,8 @@ class TrainLoop:
         self.schedule_sampler = create_named_schedule_sampler(self.schedule_sampler_type, diffusion)
         self.eval_wrapper = None
         if args.dataset == 'humanml' and args.eval_during_training:
-            self.num_samples_limit = 100
-            self.replication_times = 3
+            self.num_samples_limit = 50  # was 100
+            self.replication_times = 2  # was 3
             self.eval_wrapper = EvaluatorMDMWrapper(args.dataset, dist_util.dev())
         self.use_ddp = False
         self.ddp_model = self.model
@@ -156,22 +156,7 @@ class TrainLoop:
         time_measure = []
         for self.step in range(self.num_steps-self.resume_step):
             self.run_step(batch, cond)
-            if self.total_step() % self.log_interval == 0:
-                for k, v in logger.get_current().name2val.items():
-                    if k == 'loss':
-                        print('step[{}]: loss[{:0.5f}]'.format(self.total_step(), v))
-
-                    if k in ['step', 'samples'] or '_q' in k:
-                        continue
-                    else:
-                        self.train_platform.report_scalar(name=k, value=v, iteration=self.total_step(), group_name='Loss')
-                if self.total_step() > 0:
-                    end_time_measure = time.time()
-                    elapsed = end_time_measure - start_time_measure
-                    time_measure.append(elapsed)
-                    print(f'Time of last {self.log_interval} iterations: {int(elapsed)} seconds.')
-                    start_time_measure = time.time()
-                self.train_platform.report_scalar(name='Learning Rate', value=self.opt.param_groups[0]['lr'], iteration=self.total_step(), group_name='LR')
+            start_time_measure, time_measure = self.apply_logging(start_time_measure, time_measure)
 
             if self.total_step() % self.save_interval == 0 and self.total_step() != 0 or self.total_step() == self.num_steps - 1:
                 self.save()
@@ -179,16 +164,34 @@ class TrainLoop:
                 self.evaluate()
                 self.generate_during_training()
                 self.model.train()
-
                 # Run for a finite amount of time in integration tests.
                 if os.environ.get("DIFFUSION_TRAINING_TEST", "") and self.total_step() > 0:
                     return
-            self.adjust_learning_rate(self.opt, self.step, self.args)
+            self.adjust_learning_rate(self.opt, self.total_step(), self.args)
 
         if len(time_measure) > 0:
             mean_times = sum(time_measure) / len(time_measure)
             print(f'Average time for {self.log_interval} iterations: {mean_times} seconds.')
 
+    def apply_logging(self, start_time_measure, time_measure):
+        if self.total_step() % self.log_interval == 0:
+            for k, v in logger.get_current().name2val.items():
+                if k == 'loss':
+                    print('step[{}]: loss[{:0.5f}]'.format(self.total_step(), v))
+
+                if k in ['step', 'samples'] or '_q' in k:
+                    continue
+                else:
+                    self.train_platform.report_scalar(name=k, value=v, iteration=self.total_step(), group_name='Loss')
+            if self.total_step() > 0:
+                end_time_measure = time.time()
+                elapsed = end_time_measure - start_time_measure
+                time_measure.append(elapsed)
+                print(f'Time of last {self.log_interval} iterations: {int(elapsed)} seconds.')
+                start_time_measure = time.time()
+            self.train_platform.report_scalar(name='Learning Rate', value=self.opt.param_groups[0]['lr'],
+                                              iteration=self.total_step(), group_name='LR')
+        return start_time_measure, time_measure
 
     def print_changed_lr(self, lr_saved):
         lr_cur = self.opt.param_groups[0]['lr']

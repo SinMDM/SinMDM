@@ -1,4 +1,6 @@
 import os
+import re
+
 try:
     # The import command must be at the top of the file and NOT internal to the ClearmlPlatform class,
     # because when cloning, the 'patching' procedure is done by the clearml engine at the very beginning
@@ -27,9 +29,10 @@ class TrainPlatform:
 class ClearmlPlatform(TrainPlatform):
     def __init__(self, save_dir):
         path, name = os.path.split(save_dir)
+        if len(re.findall('\d\d\d\d', name)) == 1:  # special care for benchmarks
+            name = os.path.split(path)[1] + "-" + name
         self.task = Task.init(project_name='sin_mdm',
                               task_name=name)
-                              # output_uri=path)
         print('self.task.get_parameters_as_dict() : ')
         print(self.task.get_parameters_as_dict())
         self.logger = self.task.get_logger()
@@ -62,5 +65,4 @@ class TensorboardPlatform(TrainPlatform):
 class NoPlatform(TrainPlatform):
     def __init__(self, save_dir):
         pass
-
 

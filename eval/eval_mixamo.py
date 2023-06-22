@@ -34,7 +34,7 @@ def mixamo_evaluate(args, model, diffusion):
     else:
         raise NotImplementedError()
 
-    slerp =0
+    slerp = 0
     data = None
 
     is_using_data = False # todo: fix this hack. not any([args.input_text, args.text_prompt, args.action_file, args.action_name])
@@ -73,6 +73,7 @@ def mixamo_evaluate(args, model, diffusion):
     inter_div_dist = []
     intra_div_dist = []
     gt_intra_div_dist = []
+    intra_div_gt_diff = []
 
     assert len(multiple_data) == 1
     motion_data = multiple_data[0]
@@ -96,6 +97,7 @@ def mixamo_evaluate(args, model, diffusion):
         inter_div_dist.append(avg_per_frame_dist(all_samples[i], all_samples[i-1]))
         intra_div_dist.append(avg_per_frame_dist(all_samples[i, offsets[i,0]:offsets[i,0]+tmin], all_samples[i, offsets[i,1]:offsets[i,1]+tmin]))
         gt_intra_div_dist.append(avg_per_frame_dist(gt[gt_offsets[i,0]:gt_offsets[i,0]+tmin], gt[gt_offsets[i,1]:gt_offsets[i,1]+tmin]))
+        intra_div_gt_diff.append(abs(intra_div_dist[-1]-gt_intra_div_dist[-1]))
         coverages.append(coverage(all_samples[i], gt))
     loop.close()
 
@@ -107,6 +109,7 @@ def mixamo_evaluate(args, model, diffusion):
         'inter_diversity_dist': {'mean': np.mean(inter_div_dist), 'std': np.std(inter_div_dist)},
         'intra_diversity_dist': {'mean': np.mean(intra_div_dist), 'std': np.std(intra_div_dist)},
         'gt_intra_diversity_dist': {'mean': np.mean(gt_intra_div_dist), 'std': np.std(gt_intra_div_dist)},
+        'intra_div_gt_diff': {'mean': np.mean(intra_div_gt_diff), 'std': np.std(intra_div_gt_diff)},
     }
 
 
