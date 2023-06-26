@@ -1,4 +1,5 @@
 # SinMDM: Single Motion Diffusion
+<img alt="teaser" src="assets/dragon_morelight2.png" width="80%"/>
 
 Please visit our [project page](https://sinmdm.github.io/SinMDM-page/) for more details.
 
@@ -161,10 +162,10 @@ bash prepare/download_t2m_evaluators.sh
 ### Run training command
 
 ```shell
-python -m train.train_sinmdm --arch qna --dataset humanml --save_dir <path_to_save_models>  --sin_path <'path to .bvh file for mixamo/bvh_general dataset or .npy file for humanml dataset'>
+python -m train.train_sinmdm --arch unet --use_attention --use_qna --dataset mixamo --save_dir <'path_to_save_models'> --sin_path <'path to .bvh file for mixamo/bvh_general dataset or .npy file for humanml dataset'> --channel_mult 1 --conv_1d --use_scale_shift_norm --use_checkpoint --lr_method ExponentialLR --lr_gamma 0.99998
 ```
 
-* Specify architecture using `--arch` Options: qna, unet  
+* Specify architecture using `--arch` Options: unet, qna  
 * Specify dataset using `--dataset` Options: humanml, mixamo, bvh_general
 * Use `--device` to define GPU id.
 * Use `--seed` to specify seed.

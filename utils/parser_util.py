@@ -93,15 +93,15 @@ def add_model_options(parser):
 
     # UNET options
     group.add_argument("--image_size", default=64, type=int, help="")
-    group.add_argument("--num_channels", default=128, type=int, help="")
-    group.add_argument("--num_res_blocks", default=2, type=int, help="")
+    group.add_argument("--num_channels", default=256, type=int, help="")
+    group.add_argument("--num_res_blocks", default=1, type=int, help="")
     group.add_argument("--num_heads", default=4, type=int, help="")
     group.add_argument("--num_heads_upsample", default=-1, type=int, help="")
     group.add_argument("--num_head_channels", default=-1, type=int, help="")
-    group.add_argument("--attention_resolutions", default="16,8", type=str, help="")
+    group.add_argument("--attention_resolutions", default="64,32", type=str, help="")
     group.add_argument("--channel_mult", default="", type=str, help="")
     group.add_argument("--learn_sigma", action='store_true', help="")
-    group.add_argument("--dropout", default=0.0, type=float, help="")
+    group.add_argument("--dropout", default=0.5, type=float, help="")
     group.add_argument("--class_cond", action='store_true', help="")
     group.add_argument("--use_checkpoint", action='store_true', help="")
     group.add_argument("--use_scale_shift_norm", action='store_true', help="")
@@ -109,7 +109,7 @@ def add_model_options(parser):
     group.add_argument("--use_fp16", action='store_true', help="")
     group.add_argument("--use_new_attention_order", action='store_true', help="")
     group.add_argument("--conv_1d", action='store_true', help="")
-    group.add_argument("--padding_mode", default='replicate', choices=['zeros', 'reflect', 'replicate', 'circular'], type=str,
+    group.add_argument("--padding_mode", default='zeros', choices=['zeros', 'reflect', 'replicate', 'circular'], type=str,
                        help="Padding mode during convolution. One of ['zeros', 'reflect', 'replicate', 'circular'].")
     group.add_argument("--padding", default=1, type=int, help="")
     group.add_argument("--lr_method", default=None, type=str, help="")
@@ -123,7 +123,7 @@ def add_model_options(parser):
     group.add_argument("--num_downsample", default=0, type=int, help="")
     group.add_argument("--drop_path", default=0.5, type=float, help="")
     group.add_argument("--use_diffusion_query", action='store_true', help="")
-    group.add_argument("--kernel_size", default=7, type=int, help="")
+    group.add_argument("--kernel_size", default=3, type=int, help="")
     group.add_argument("--use_global_pe", action="store_true", help="")
 
 
@@ -157,8 +157,8 @@ def add_training_options(parser):
     group.add_argument("--train_platform_type", default='NoPlatform', choices=['NoPlatform', 'ClearmlPlatform', 'TensorboardPlatform'], type=str,
                        help="Choose platform to log results. NoPlatform means no logging.")
     group.add_argument("--lr", default=1e-4, type=float, help="Learning rate.")
-    group.add_argument("--warmup_steps", default=1000, type=int, help="Number of warmup steps")
-    group.add_argument("--weight_decay", default=0.02, type=float, help="Optimizer weight decay.")
+    group.add_argument("--warmup_steps", default=0, type=int, help="Number of warmup steps")
+    group.add_argument("--weight_decay", default=0, type=float, help="Optimizer weight decay.")
     group.add_argument("--lr_anneal_steps", default=0, type=int, help="Number of learning rate anneal steps.")
     group.add_argument("--eval_batch_size", default=32, type=int,
                        help="Batch size during evaluation loop. Do not change this unless you know what you are doing. "
@@ -175,7 +175,7 @@ def add_training_options(parser):
                        help="Log losses each N steps")
     group.add_argument("--save_interval", default=10_000, type=int,
                        help="Save checkpoints and run evaluation each N steps")
-    group.add_argument("--num_steps", default=20_000, type=int,
+    group.add_argument("--num_steps", default=60_000, type=int,
                        help="Training will stop after the specified number of steps.")
     group.add_argument("--num_frames", default=60, type=int,
                        help="Limit for the maximal number of frames. In HumanML3D this field is ignored.")
