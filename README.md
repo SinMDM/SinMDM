@@ -1,5 +1,5 @@
 # SinMDM: Single Motion Diffusion
-<img alt="teaser" src="assets/dragon_morelight2.png" width="80%"/>
+<img alt="teaser" src="assets/dragon.png" width="80%"/>
 
 Please visit our [project page](https://sinmdm.github.io/SinMDM-page/) for more details.
 
