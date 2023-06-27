@@ -162,7 +162,7 @@ bash prepare/download_t2m_evaluators.sh
 ### Run training command
 
 ```shell
-python -m train.train_sinmdm --arch unet --use_attention --use_qna --dataset mixamo --save_dir <'path_to_save_models'> --sin_path <'path to .bvh file for mixamo/bvh_general dataset or .npy file for humanml dataset'> --channel_mult 1 --conv_1d --use_scale_shift_norm --use_checkpoint --lr_method ExponentialLR --lr_gamma 0.99998
+python -m train.train_sinmdm --arch unet --dataset mixamo --save_dir <'path_to_save_models'> --sin_path <'path to .bvh file for mixamo/bvh_general dataset or .npy file for humanml dataset'> --lr_method ExponentialLR --lr_gamma 0.99998 --use_scale_shift_norm --use_checkpoint
 ```
 
 * Specify architecture using `--arch` Options: unet, qna  

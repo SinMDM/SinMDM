@@ -99,7 +99,7 @@ def add_model_options(parser):
     group.add_argument("--num_heads_upsample", default=-1, type=int, help="")
     group.add_argument("--num_head_channels", default=-1, type=int, help="")
     group.add_argument("--attention_resolutions", default="64,32", type=str, help="")
-    group.add_argument("--channel_mult", default="", type=str, help="")
+    group.add_argument("--channel_mult", default="1", type=str, help="")
     group.add_argument("--learn_sigma", action='store_true', help="")
     group.add_argument("--dropout", default=0.5, type=float, help="")
     group.add_argument("--class_cond", action='store_true', help="")
@@ -108,15 +108,15 @@ def add_model_options(parser):
     group.add_argument("--resblock_updown", action='store_true', help="")
     group.add_argument("--use_fp16", action='store_true', help="")
     group.add_argument("--use_new_attention_order", action='store_true', help="")
-    group.add_argument("--conv_1d", action='store_true', help="")
+    parser.add_argument("--conv_1d", action=StoreBooleanAction, default=True, help="")
     group.add_argument("--padding_mode", default='zeros', choices=['zeros', 'reflect', 'replicate', 'circular'], type=str,
                        help="Padding mode during convolution. One of ['zeros', 'reflect', 'replicate', 'circular'].")
     group.add_argument("--padding", default=1, type=int, help="")
     group.add_argument("--lr_method", default=None, type=str, help="")
     group.add_argument("--lr_step", default=None, type=int, help="")
     group.add_argument("--lr_gamma", default=None, type=float, help="")
-    group.add_argument("--use_attention", action='store_true', help="")
-    group.add_argument("--use_qna", action='store_true', help="")
+    parser.add_argument("--use_attention", action=StoreBooleanAction, default=True, help="")
+    parser.add_argument("--use_qna", action=StoreBooleanAction, default=True, help="")
 
     # QnA Options:
     group.add_argument("--head_dim", default=32, type=int, help="")
@@ -286,3 +286,13 @@ def evaluation_parser():
     add_base_options(parser)
     add_evaluation_options(parser)
     return parse_and_load_from_model(parser)
+
+
+class StoreBooleanAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values.lower() in ('true', 't', 'yes', 'y', '1'):
+            setattr(namespace, self.dest, True)
+        elif values.lower() in ('false', 'f', 'no', 'n', '0'):
+            setattr(namespace, self.dest, False)
+        else:
+            parser.error("Invalid value for --use_attention. Please provide either 'True' or 'False'.")
