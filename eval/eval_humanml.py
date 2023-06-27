@@ -100,27 +100,7 @@ def evaluate(args, model, diffusion, eval_wrapper, num_samples_limit, replicatio
         sifid = []
         for rep_i in range(replication_times):
             gt_samples = get_sample(args.sin_path, args.device)
-            eval_special = args.eval_special if hasattr(args, 'eval_special') else 'none'
-            if eval_special == 'none':
-                gen_samples = generate_eval_samples(model, diffusion, num_samples_limit)
-            elif eval_special == 'self':
-                gen_samples = gt_samples.expand(num_samples_limit, -1, -1)
-            elif eval_special == 'other':
-                import glob
-                sin_base_path = os.path.split(args.sin_path)[0]
-                benchmark_files = glob.glob(os.path.join(sin_base_path, '000*.npy'))
-                benchmark_files = list(set(benchmark_files) - {os.path.normpath(args.sin_path)})
-                num_files = len(benchmark_files)
-                choice = np.random.choice(np.arange(num_files), num_samples_limit)
-                samples = []
-                for i in range(num_files):
-                    samples.append(get_sample(benchmark_files[i], args.device))
-                min_n_frames = min([a.shape[0] for a in samples])
-                samples = [samples[i][:min_n_frames] for i in range(num_files)]  # crop all samples to the size of the shortest one
-                samples = torch.stack(samples)
-                gen_samples = samples[choice]
-            else:
-                raise f'unknown value eval_special = {args.eval_special}'
+            gen_samples = generate_eval_samples(model, diffusion, num_samples_limit)
             print(f'===REP[{rep_i}]===')
             _intra_diversity = calc_intra_diversity(eval_wrapper, gen_samples, window_size=window_size)
             intra_diversity.append(_intra_diversity)

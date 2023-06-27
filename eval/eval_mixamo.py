@@ -69,7 +69,6 @@ def mixamo_evaluate(args, model, diffusion):
     global_variations = []
     local_variations = []
     coverages = []
-    inter_div_local = []
     inter_div_dist = []
     intra_div_dist = []
     gt_intra_div_dist = []
@@ -93,7 +92,6 @@ def mixamo_evaluate(args, model, diffusion):
     for i in loop:
         global_variations.append(patched_nn_main(all_samples[i], gt))
         local_variations.append(perwindow_nn(all_samples[i], gt, tmin=tmin))
-        inter_div_local.append(perwindow_nn(all_samples[i], all_samples[i-1], tmin=tmin))
         inter_div_dist.append(avg_per_frame_dist(all_samples[i], all_samples[i-1]))
         intra_div_dist.append(avg_per_frame_dist(all_samples[i, offsets[i,0]:offsets[i,0]+tmin], all_samples[i, offsets[i,1]:offsets[i,1]+tmin]))
         gt_intra_div_dist.append(avg_per_frame_dist(gt[gt_offsets[i,0]:gt_offsets[i,0]+tmin], gt[gt_offsets[i,1]:gt_offsets[i,1]+tmin]))
@@ -105,7 +103,6 @@ def mixamo_evaluate(args, model, diffusion):
         'coverage': {'mean': np.mean(coverages) * 100, 'std': np.std(coverages) * 100},
         'global_diversity': {'mean': np.mean(global_variations), 'std': np.std(global_variations)},
         'local_diversity': {'mean': np.mean(local_variations), 'std': np.std(local_variations)},
-        'inter_diversity_local': {'mean': np.mean(inter_div_local), 'std': np.std(inter_div_local)},
         'inter_diversity_dist': {'mean': np.mean(inter_div_dist), 'std': np.std(inter_div_dist)},
         'intra_diversity_dist': {'mean': np.mean(intra_div_dist), 'std': np.std(intra_div_dist)},
         'gt_intra_diversity_dist': {'mean': np.mean(gt_intra_div_dist), 'std': np.std(gt_intra_div_dist)},

@@ -237,8 +237,6 @@ def add_evaluation_options(parser):
     group = parser.add_argument_group('eval')
     group.add_argument("--model_path", required=True, type=str,
                        help="Path to model####.pt file to be sampled.")
-    group.add_argument("--eval_special", default='none', choices=['none', 'self', 'other'], type=str,
-                       help='evaluation of extreme case, for debug only.')
 
 
 

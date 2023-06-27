@@ -1,5 +1,5 @@
-# This file collect benchmark evaluation abd write it to ClearML
-# DO NOT RUN IT STAND-ALONE - Run train/benchmark_training.sh which will run this automatically
+# This file collect benchmark evaluation and write it to ClearML
+# DO NOT RUN IT STAND-ALONE - Run eval/eval_only_mixamo_benchmark.sh which will run this automatically
 import argparse
 import time
 import os
@@ -10,24 +10,6 @@ import json
 import glob
 import re
 
-
-def fix_intra(args, special_suffix):
-    assert args.fix_intra
-    all_eval_files = glob.glob(os.path.join(args.benchmark_dir, '*', f'eval_*{special_suffix}.npy'))
-    # all_eval_files = glob.glob(os.path.join(args.benchmark_dir, '*', 'final_eval.npy'))  # ganimator only
-    for eval_file in all_eval_files:
-        vals = np.load(eval_file, allow_pickle=True)[None][0]
-        vals['intra_diversity_gt_diff'] = {}
-        vals['intra_diversity_gt_diff']['mean'] = \
-            abs(vals['intra_diversity_dist']['mean'] - vals['gt_intra_diversity_dist']['mean'])
-        vals['intra_diversity_gt_diff']['std'] = 0
-        name_fix = eval_file.replace('.npy', '_fix_intra.npy')
-        assert not os.path.exists(name_fix)
-        np.save(name_fix, vals)
-        with open(name_fix.replace('.npy', '.log'), 'w') as fw:
-            fw.write(str(vals))
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--benchmark_dir", required=True, type=str, help="")
@@ -37,8 +19,6 @@ if __name__ == '__main__':
                         default='NoPlatform', choices=['NoPlatform', 'ClearmlPlatform', 'TensorboardPlatform'],
                         type=str,
                         help="Choose platform to log results. NoPlatform means no logging.")
-    parser.add_argument("--fix_intra", action='store_true',
-                        help="fix the intra diversity according to the eval_special flag")
     args = parser.parse_args()
 
     last_reported_iter = args.num_steps - 1
@@ -51,27 +31,22 @@ if __name__ == '__main__':
                     os.path.join(args.benchmark_dir, 'args.json'))
     print(last_eval_files)
 
-    if not args.fix_intra:
-        while not all([os.path.exists(f) for f in last_eval_files]):
-            print('Waiting for all evaluations to finish. DO NOT KILL.')
-            print('Missing files: ' + str([f for f in last_eval_files if not os.path.exists(f)]))
-            time.sleep(30)
-    else:
-        special_suffix = ''
-        fix_intra(args, special_suffix)
-        special_suffix += '_fix_intra'
+    while not all([os.path.exists(f) for f in last_eval_files]):
+        print('Waiting for all evaluations to finish. DO NOT KILL.')
+        print('Missing files: ' + str([f for f in last_eval_files if not os.path.exists(f)]))
+        time.sleep(30)
 
     # Open a clearml task
     with open(os.path.join(args.benchmark_dir, 'args.json'), 'r') as fr:
         orig_args = json.load(fr)
     train_platform_type = eval(args.train_platform_type)
-    task_name = args.benchmark_dir + f'-benchmark-{args.num_steps}steps-{args.benchmark_size}samples{special_suffix}'
+    task_name = args.benchmark_dir + f'-benchmark-{args.num_steps}steps-{args.benchmark_size}samples'
     train_platform = train_platform_type(task_name)
     train_platform.report_args(orig_args, name='Args')
 
     # add reports from previous iterations, if exist
-    all_eval_files = glob.glob(os.path.join(args.benchmark_dir, '*', f'eval_*{special_suffix}.npy'))
-    # all_eval_files = glob.glob(os.path.join(args.benchmark_dir, '*', f'final_eval{special_suffix}.npy'))  # ganimator only
+    all_eval_files = glob.glob(os.path.join(args.benchmark_dir, '*', f'eval.npy'))
+    # all_eval_files = glob.glob(os.path.join(args.benchmark_dir, '*', f'final_eval.npy'))  # ganimator only
     eval_dicts = {}
     for eval_file in all_eval_files:
         iter = re.findall('.*eval_(\d+).*.npy', eval_file)
@@ -91,7 +66,7 @@ if __name__ == '__main__':
                 train_platform.report_scalar(name=f'sample{sample_i:04d}', value=vals['mean'], iteration=iter,
                                              group_name=m)
 
-    log_file = os.path.join(args.benchmark_dir, f'eval{special_suffix}.log')
+    log_file = os.path.join(args.benchmark_dir, f'eval.log')
     metric_names = eval_dicts['0000'][last_reported_iter].keys()
     mean_dict = dict()
 
