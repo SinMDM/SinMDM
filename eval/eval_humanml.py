@@ -26,7 +26,7 @@ def slice_motion_sample(sample, window_size, step_size=10):
 
 def get_sample(path, device):
     try:
-        return torch.tensor(np.load(path), device=device).squeeze().permute(1, 0)
+        return torch.tensor(np.load(path), device=device).squeeze()#.permute(1, 0)
     except:
         return np.load(path, allow_pickle=True)[None][0]['motion_raw'][0].to(device).squeeze().permute(1, 0)  # benchmark npy
 

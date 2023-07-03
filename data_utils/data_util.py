@@ -12,6 +12,10 @@ def load_sin_motion(args):
         assert suffix == '.npy'
         try:
             motion = np.load(args.sin_path)  # only motion npy
+            if len(motion.shape) == 2:
+                motion = np.transpose(motion)
+                motion = np.expand_dims(motion, axis=1)
+
         except:
             motion = np.array(np.load(args.sin_path, allow_pickle=True)[None][0]['motion_raw'][0])  # benchmark npy
         motion = torch.from_numpy(motion)
