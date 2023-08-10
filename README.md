@@ -338,3 +338,14 @@ Our code partially uses each of the following works. We thank the authors of the
 ## License
 This code is distributed under the [MIT LICENSE](LICENSE).
 
+## Citation
+
+If you use this code for your research, please cite our paper:
+
+~~~bibtex
+@article{raab2023single,
+title={Single Motion Diffusion},
+author={Raab, Sigal and Leibovitch, Inbal and Tevet, Guy and Arar, Moab and Bermano, Amit H and Cohen-Or, Daniel},
+journal={arXiv preprint arXiv:2302.05905},
+year={2023}
+}
