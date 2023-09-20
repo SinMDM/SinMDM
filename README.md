@@ -338,8 +338,8 @@ Our code partially uses each of the following works. We thank the authors of the
 ## License
 This code is distributed under the [MIT LICENSE](LICENSE).
 
+<!--
 ## Citation
-
 If you use this code for your research, please cite our paper:
 
 ~~~bibtex
@@ -349,3 +349,4 @@ author={Raab, Sigal and Leibovitch, Inbal and Tevet, Guy and Arar, Moab and Berm
 journal={arXiv preprint arXiv:2302.05905},
 year={2023}
 }
+-->
