@@ -9,7 +9,7 @@ This code has been tested in the following environment:
 * Ubuntu 18.04.5 LTS
 * Python 3.8
 * conda3 or miniconda3
-* CUDA capable GPU (one is enough)
+* CUDA capable GPU (one is enough) 
 
 Setup conda env:
 ```shell
