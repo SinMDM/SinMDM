@@ -1,4 +1,6 @@
 # SinMDM: Single Motion Diffusion
+ICLR 2024 Spotlight
+
 <img alt="teaser" src="assets/dragon.png" width="80%"/>
 
 Please visit our [project page](https://sinmdm.github.io/SinMDM-page/) for more details.
